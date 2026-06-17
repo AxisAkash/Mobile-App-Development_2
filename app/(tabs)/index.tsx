@@ -1,10 +1,10 @@
-import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-native";
 import StudentItem from "@/components/student-item";
 import { Student, STUDENTS } from "@/data/students";
 import SearchBar from "@/components/search-bar";
 // NEW: import the StudentDetail component to show student details when selected
 import StudentDetail from "@/components/student-detail";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function HomeScreen() {
     // State 1: the current search query
@@ -12,6 +12,14 @@ export default function HomeScreen() {
 
     // NEW: State 2: the currently selected student (null = none selected)
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    // State 3: selected department filter (All = no department filter)
+    const [selectedDept, setSelectedDept] = useState<string>("All");
+
+    // derive list of department options (include All)
+    const departments = useMemo(() => {
+        const set = new Set<string>(STUDENTS.map((s) => s.department));
+        return ["All", ...Array.from(set)];
+    }, []);
 
     // NEW: Toggle selection: tap same student to select and deselect
     const handleSelect = (student: Student) => {
@@ -19,17 +27,23 @@ export default function HomeScreen() {
     };
 
     // Derived value: filter students based on query
-    // This is NOT state — it is computed from state every render
-    const filtered = STUDENTS.filter((s) => {
-        return (
-            s.name.toLowerCase().includes(query.toLowerCase()) || // check if name matches query OR
-            s.department.toLowerCase().includes(query.toLowerCase()) // check if department matches query
-        );
-    });
+    // Use useMemo to avoid recomputing on unrelated renders
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return STUDENTS.filter((s) => {
+            if (selectedDept !== "All" && s.department !== selectedDept) return false;
+            if (q.length === 0) return true;
+            return (
+                s.name.toLowerCase().includes(q) || // check if name matches query OR
+                s.department.toLowerCase().includes(q) || // check if department matches query
+                s.studentId.toLowerCase().includes(q)
+            );
+        });
+    }, [query, selectedDept]);
 
     return (
         // View is the container that contains the list of students and search bar
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.titleBar}>
                 <Text style={styles.title}>Student Directory</Text>
             </View>
@@ -37,12 +51,31 @@ export default function HomeScreen() {
             {/* update the value and onChangeText function in the Search Bar */}
             <SearchBar value={query} onChangeText={setQuery} />
 
+            {/* Department filter pills */}
+            <View style={styles.pillsRowWrapper}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
+                    {departments.map((dept) => (
+                        <TouchableOpacity
+                            key={dept}
+                            style={[styles.pill, selectedDept === dept && styles.pillActive]}
+                            onPress={() => setSelectedDept(dept)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={[styles.pillText, selectedDept === dept && styles.pillTextActive]}>{dept}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
             <FlatList
+                style={styles.list}
                 data={filtered}
                 keyExtractor={(item) => item.id}
-				// NEW: update the onPress handler to toggle selection and pass isSelected prop to StudentItem
-				// and the isSelected prop is used to conditionally style the selected student item in the list (e.g., highlight it)
-                renderItem={({ item }) => <StudentItem student={item} onPress={handleSelect} isSelected={selectedStudent?.id === item.id} />}
+                renderItem={({ item }) => (
+                    <StudentItem student={item} onPress={handleSelect} isSelected={selectedStudent?.id === item.id} />
+                )}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={filtered.length === 0 ? undefined : styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Text style={styles.emptyText}>No students match "{query}"</Text>
@@ -52,7 +85,7 @@ export default function HomeScreen() {
 
             {/* NEW: Detail panel — only shown when a student is selected */}
             {selectedStudent && <StudentDetail student={selectedStudent} />}
-        </ScrollView>
+        </View>
     );
 }
 
@@ -102,5 +135,36 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 14,
         color: "#94A3B8",
+    },
+    list: {
+        flex: 1,
+    },
+    pillsRowWrapper: {
+        paddingVertical: 10,
+        backgroundColor: "#FFFFFF",
+        borderBottomWidth: 1,
+        borderBottomColor: "#E6EEF6",
+    },
+    pillsRow: {
+        paddingHorizontal: 12,
+        gap: 8,
+        alignItems: "center",
+    },
+    pill: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: "#F1F5F9",
+    },
+    pillActive: {
+        backgroundColor: "#0D4ED8",
+    },
+    pillText: {
+        fontSize: 12,
+        color: "#0D1F4E",
+    },
+    pillTextActive: {
+        color: "#FFFFFF",
+        fontWeight: "600",
     },
 });

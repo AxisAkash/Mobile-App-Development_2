@@ -3,18 +3,24 @@ import { StyleSheet, View } from "react-native";
 import StudentItem from "@/components/student-item";
 // Importing the list of students from our data file
 import { STUDENTS } from "@/data/students";
+// NEW: Importing the SearchBar component to allow users to search for students
+import SearchBar from "@/components/search-bar";
 
 export default function HomeScreen() {
     return (
-        // View is the container that contains the list of students.
-        // We map over the STUDENTS array and render a StudentItem for each student.
+        // View is the container that contains the list of students and search bar
         <View style={styles.container}>
+            {/* // NEW: Search Bar */}
+            <SearchBar value="" onChangeText={() => {}} />
+
+            {/* // We map over the STUDENTS array and render a StudentItem for each student. */}
             {STUDENTS.map((student) => (
                 <StudentItem key={student.id} student={student} onPress={() => {}} isSelected={false} />
             ))}
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {

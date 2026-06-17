@@ -1,15 +1,22 @@
 import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
-// Importing our custom StudentItem component to display each student in the list
 import StudentItem from "@/components/student-item";
-// Importing the list of students from our data file
 import { Student, STUDENTS } from "@/data/students";
-// NEW: Importing the SearchBar component to allow users to search for students
 import SearchBar from "@/components/search-bar";
+// NEW: import the StudentDetail component to show student details when selected
+import StudentDetail from "@/components/student-detail";
 import { useState } from "react";
 
 export default function HomeScreen() {
     // State 1: the current search query
     const [query, setQuery] = useState<string>("");
+
+    // NEW: State 2: the currently selected student (null = none selected)
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+    // NEW: Toggle selection: tap same student to select and deselect
+    const handleSelect = (student: Student) => {
+        setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
+    };
 
     // Derived value: filter students based on query
     // This is NOT state — it is computed from state every render
@@ -30,17 +37,21 @@ export default function HomeScreen() {
             {/* update the value and onChangeText function in the Search Bar */}
             <SearchBar value={query} onChangeText={setQuery} />
 
-            {/* NEW: Student list using React Native's FlatList component*/}
             <FlatList
                 data={filtered}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <StudentItem student={item} onPress={() => {}} isSelected={false} />}
+				// NEW: update the onPress handler to toggle selection and pass isSelected prop to StudentItem
+				// and the isSelected prop is used to conditionally style the selected student item in the list (e.g., highlight it)
+                renderItem={({ item }) => <StudentItem student={item} onPress={handleSelect} isSelected={selectedStudent?.id === item.id} />}
                 ListEmptyComponent={
                     <View style={styles.empty}>
                         <Text style={styles.emptyText}>No students match "{query}"</Text>
                     </View>
                 }
             />
+
+            {/* NEW: Detail panel — only shown when a student is selected */}
+            {selectedStudent && <StudentDetail student={selectedStudent} />}
         </ScrollView>
     );
 }

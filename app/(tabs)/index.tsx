@@ -56,7 +56,7 @@ export default function HomeScreen() {
     if (showForm) {
         return (
             <View style={styles.container}>
-                <AddStudentForm onSubmitSuccess={handleNewStudent} />
+                <AddStudentForm onSubmitSuccess={handleNewStudent} onCancel={() => setShowForm(false)} />
             </View>
         );
     }

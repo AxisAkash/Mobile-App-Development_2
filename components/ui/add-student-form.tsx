@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -30,8 +31,10 @@ interface FormErrors {
 
 export default function AddStudentForm({
   onSubmitSuccess = () => undefined,
+  onCancel = () => undefined,
 }: {
   onSubmitSuccess?: (student: Student) => void;
+  onCancel?: () => void;
 }) {
   // Existing state
   const [formData, setFormData] = useState<FormData>({
@@ -175,6 +178,37 @@ export default function AddStudentForm({
 
   const bioLength = formData.bio.length;
 
+  const hasUnsavedChanges =
+    formData.name.trim().length > 0 ||
+    formData.studentId.trim().length > 0 ||
+    formData.email.trim().length > 0 ||
+    formData.department.trim().length > 0 ||
+    formData.bio.trim().length > 0 ||
+    formData.skills.trim().length > 0;
+
+  const handleCancelPress = () => {
+    if (!hasUnsavedChanges) {
+      onCancel();
+      return;
+    }
+
+    Alert.alert(
+      'Discard Changes?',
+      'You have unsaved changes. Are you sure you want to discard them?',
+      [
+        {
+          text: 'Keep Editing',
+          style: 'cancel',
+        },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: onCancel,
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View>
@@ -252,18 +286,33 @@ export default function AddStudentForm({
           autoCapitalize="words"
         />
 
-        {/* NEW: Submit button */}
-        <Pressable
-          style={[styles.button, (!isFormValid || isSubmitting) && styles.buttonDisabled]}
-          onPress={handleSubmitPress}
-          disabled={!isFormValid || isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.buttonText}>Join Directory</Text>
-          )}
-        </Pressable>
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.cancelButton}
+            onPress={handleCancelPress}
+          >
+            <Text style={styles.cancelButtonText}>
+              Cancel
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.button,
+              !isFormValid && styles.buttonDisabled,
+            ]}
+            onPress={handleSubmitPress}
+            disabled={!isFormValid || isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>
+                Join Directory
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -277,13 +326,29 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 24,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  cancelButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontWeight: '700',
+  },
   button: {
+    flex: 1,
     backgroundColor: '#0D9488',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 32,
   },
   buttonDisabled: {
     backgroundColor: '#CBD5E1',

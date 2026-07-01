@@ -93,6 +93,8 @@ export default function AddStudentForm({
       nextErrors.bio = 'Bio is required';
     } else if (formData.bio.trim().length < 10) {
       nextErrors.bio = 'Bio must be at least 10 characters';
+    } else if (formData.bio.length > 200) {
+      nextErrors.bio = 'Bio cannot exceed 200 characters';
     }
 
     if (!formData.skills.trim()) {
@@ -171,6 +173,8 @@ export default function AddStudentForm({
     }
   };
 
+  const bioLength = formData.bio.length;
+
   return (
     <ScrollView style={styles.container}>
       <View>
@@ -228,6 +232,15 @@ export default function AddStudentForm({
           multiline={true}
         />
 
+        <Text
+          style={[
+            styles.characterCounter,
+            bioLength > 200 && styles.characterCounterError,
+          ]}
+        >
+          {bioLength} / 200 characters
+        </Text>
+
         {/* ===== UPDATED: Skills field with onBlur and getFieldError ===== */}
         <FormField
           label="Skills"
@@ -279,5 +292,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+  characterCounter: {
+    textAlign: 'right',
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 12,
+  },
+  characterCounterError: {
+    color: '#DC2626',
   },
 });

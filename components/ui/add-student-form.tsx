@@ -13,6 +13,7 @@ import type { Student } from '../../data/students';
 interface FormData {
   name: string;
   studentId: string;
+  email: string;
   department: string;
   bio: string;
   skills: string;
@@ -21,6 +22,7 @@ interface FormData {
 interface FormErrors {
   name?: string;
   studentId?: string;
+  email?: string;
   department?: string;
   bio?: string;
   skills?: string;
@@ -35,6 +37,7 @@ export default function AddStudentForm({
   const [formData, setFormData] = useState<FormData>({
     name: '',
     studentId: '',
+    email: '',
     department: '',
     bio: '',
     skills: '',
@@ -72,6 +75,14 @@ export default function AddStudentForm({
       nextErrors.studentId = 'Student ID is required';
     } else if (!/^[0-9]{7,10}$/.test(formData.studentId.trim())) {
       nextErrors.studentId = 'Student ID must be 7-10 digits';
+    }
+
+    const emailRegex = /^\S+@\S+\.\S+$/;
+
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email.trim())) {
+      nextErrors.email = 'Please enter a valid email address';
     }
 
     if (!formData.department.trim()) {
@@ -126,7 +137,7 @@ export default function AddStudentForm({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [submitTrigger, formData.bio, formData.department, formData.name, formData.skills, formData.studentId, onSubmitSuccess]);
+  }, [submitTrigger, formData.bio, formData.department, formData.email, formData.name, formData.skills, formData.studentId, onSubmitSuccess]);
 
   // ===== UPDATED: Handle submit press =====
   const handleSubmitPress = () => {
@@ -134,6 +145,7 @@ export default function AddStudentForm({
     setTouched({
       name: true,
       studentId: true,
+      email: true,
       department: true,
       bio: true,
       skills: true,
@@ -181,6 +193,17 @@ export default function AddStudentForm({
           onBlur={() => markTouched('studentId')}
           placeholder="e.g. 20241234"
           error={getFieldError('studentId')}
+        />
+
+        {/* ===== NEW: Email field ===== */}
+        <FormField
+          label="Email"
+          value={formData.email}
+          onChangeText={(text: string) => updateField('email', text)}
+          onBlur={() => markTouched('email')}
+          placeholder="e.g. ashraful@example.com"
+          autoCapitalize="none"
+          error={getFieldError('email')}
         />
 
         {/* ===== UPDATED: Department field with onBlur and getFieldError ===== */}

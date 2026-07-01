@@ -139,6 +139,10 @@ const styles = StyleSheet.create({
     list: {
         flex: 1,
     },
+    listContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+    },
     pillsRowWrapper: {
         paddingVertical: 10,
         backgroundColor: "#FFFFFF",

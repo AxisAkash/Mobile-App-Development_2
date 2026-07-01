@@ -1,153 +1,53 @@
-// components/form-field.tsx 
-
-import React from "react"; 
-
-import { StyleSheet, Text, TextInput, View } from "react-native"; 
-
-  
-
-interface FormFieldProps { 
-
-  label: string; 
-
-  value: string; 
-
-  onChangeText: (text: string) => void; 
-
-  error?: string; 
-
-  placeholder?: string; 
-
-  multiline?: boolean; 
-
-  autoCapitalize?: "none" | "sentences" | "words" | "characters"; 
-
-} 
-
-  
-
-export default function FormField({ 
-
-  label, 
-
-  value, 
-
-  onChangeText, 
-
-  error, 
-
-  placeholder, 
-
-  multiline = false, 
-
-  autoCapitalize = "sentences", 
-
-}: FormFieldProps) { 
-
-  return ( 
-
-    <View style={styles.container}> 
-
-      <Text style={styles.label}>{label}</Text> 
-
-      <TextInput 
-
-        style={[ 
-
-          styles.input, 
-
-          multiline && styles.multiline, 
-
-          error && styles.inputError, 
-
-        ]} 
-
-        value={value} 
-
-        onChangeText={onChangeText} 
-
-        placeholder={placeholder} 
-
-        placeholderTextColor="#94A3B8" 
-
-        multiline={multiline} 
-
-        autoCapitalize={autoCapitalize} 
-
-      /> 
-
-      {/* Only render the error line when there is an error */} 
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null} 
-
-    </View> 
-
-  ); 
-
-} 
-
-  
-
-const styles = StyleSheet.create({ 
-
-  container: { marginBottom: 16 }, 
-
-  label: { 
-
-    fontSize: 13, 
-
-    fontWeight: "600", 
-
-    color: "#334155", 
-
-    marginBottom: 6, 
-
-  }, 
-
-  input: { 
-
-    backgroundColor: "#F1F5F9", 
-
-    borderRadius: 10, 
-
-    paddingHorizontal: 14, 
-
-    paddingVertical: 10, 
-
-    fontSize: 14, 
-
-    color: "#1E293B", 
-
-    borderWidth: 1, 
-
-    borderColor: "transparent", 
-
-  }, 
-
-  multiline: { 
-
-    minHeight: 80, 
-
-    textAlignVertical: "top", 
-
-  }, 
-
-  inputError: { 
-
-    borderColor: "#EF4444", 
-
-    backgroundColor: "#FEF2F2", 
-
-  }, 
-
-  errorText: { 
-
-    fontSize: 11, 
-
-    color: "#DC2626", 
-
-    marginTop: 4, 
-
-  }, 
-
-}); 
+import React from 'react';
+import { View, Text, TextInput } from 'react-native';
+
+// ===== UPDATED: Add onBlur to interface =====
+interface FormFieldProps {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  onBlur?: () => void; // NEW: Optional onBlur prop
+  error?: string;
+  placeholder?: string;
+  multiline?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  secureTextEntry?: boolean;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+}
+
+// ===== UPDATED: Add onBlur to parameter list =====
+export default function FormField({
+  label,
+  value,
+  onChangeText,
+  onBlur, // NEW: onBlur prop
+  error,
+  placeholder,
+  multiline = false,
+  autoCapitalize = 'sentences',
+  secureTextEntry = false,
+  keyboardType = 'default',
+}: FormFieldProps) {
+  return (
+    <View className="mb-4">
+      <Text className="mb-1 text-sm font-medium text-gray-700">{label}</Text>
+      <TextInput
+        className={`rounded-lg border p-3 text-base ${
+          error ? 'border-red-500' : 'border-gray-300'
+        } ${multiline ? 'min-h-[100px]' : ''}`}
+        value={value}
+        onChangeText={onChangeText}
+        // ===== NEW: Pass onBlur to TextInput =====
+        onBlur={onBlur}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        multiline={multiline}
+        numberOfLines={multiline ? 4 : 1}
+        autoCapitalize={autoCapitalize}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+      />
+      {error && <Text className="mt-1 text-sm text-red-500">{error}</Text>}
+    </View>
+  );
+}

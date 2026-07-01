@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
 } from 'react-native';
 import FormField from '../form-field';
+import type { Student } from '../../data/students';
 
 interface FormData {
   name: string;
@@ -23,7 +24,11 @@ interface FormErrors {
   skills?: string;
 }
 
-export default function AddStudentForm() {
+export default function AddStudentForm({
+  onSubmitSuccess = () => undefined,
+}: {
+  onSubmitSuccess?: (student: Student) => void;
+}) {
   // Existing state
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -35,6 +40,7 @@ export default function AddStudentForm() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitTrigger, setSubmitTrigger] = useState(false);
 
   // ===== NEW: Touched and submit attempted state =====
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -100,17 +106,43 @@ export default function AddStudentForm() {
     return isValid;
   };
 
+  useEffect(() => {
+    if (!submitTrigger) return;
+
+    const timeoutId = setTimeout(() => {
+      const newStudent: Student = {
+        id: Date.now().toString(),
+        name: formData.name.trim(),
+        studentId: formData.studentId.trim(),
+        department: formData.department.trim(),
+        bio: formData.bio.trim(),
+        skills: formData.skills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter((skill) => skill.length > 0),
+        avatarUrl: 'https://i.pravatar.cc/150?u=' + Date.now(),
+      };
+
+      setIsSubmitting(false);
+      setSubmitTrigger(false);
+      onSubmitSuccess(newStudent);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [submitTrigger, formData.bio, formData.department, formData.name, formData.skills, formData.studentId, onSubmitSuccess]);
+
   // ===== UPDATED: Handle submit press =====
   const handleSubmitPress = () => {
     // Mark all fields as touched
-    setTouched((prev) => ({
-      ...prev,
+    setTouched({
       name: true,
       studentId: true,
       department: true,
       bio: true,
       skills: true,
-    }));
+    });
 
     setSubmitAttempted(true);
 
@@ -119,10 +151,7 @@ export default function AddStudentForm() {
 
     if (isFormValid) {
       setIsSubmitting(true);
-      // Your existing submit logic here
-      // setSubmitTrigger(true);
-      console.log('Form is valid, submitting...');
-      // Submit form data
+      setSubmitTrigger(true);
     }
   };
 

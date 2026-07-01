@@ -1,14 +1,19 @@
-import { FlatList, StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-native";
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, ScrollView, Pressable } from "react-native";
 import StudentItem from "@/components/student-item";
-import { Student, STUDENTS } from "@/data/students";
 import SearchBar from "@/components/search-bar";
 // NEW: import the StudentDetail component to show student details when selected
 import StudentDetail from "@/components/student-detail";
+import AddStudentForm from "../../components/add-student-form";
+import { Student, STUDENTS } from "../../data/students";
 import { useState, useMemo } from "react";
 
 export default function HomeScreen() {
     // State 1: the current search query
     const [query, setQuery] = useState<string>("");
+
+    // NEW: Local students state
+    const [students, setStudents] = useState<Student[]>(STUDENTS);
+    const [showForm, setShowForm] = useState(false);
 
     // NEW: State 2: the currently selected student (null = none selected)
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -17,20 +22,26 @@ export default function HomeScreen() {
 
     // derive list of department options (include All)
     const departments = useMemo(() => {
-        const set = new Set<string>(STUDENTS.map((s) => s.department));
+        const set = new Set<string>(students.map((s) => s.department));
         return ["All", ...Array.from(set)];
-    }, []);
+    }, [students]);
 
     // NEW: Toggle selection: tap same student to select and deselect
     const handleSelect = (student: Student) => {
         setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
     };
 
+    // NEW: Add student form integration
+    const handleNewStudent = (newStudent: Student) => {
+        setStudents((prev) => [newStudent, ...prev]);
+        setShowForm(false);
+    };
+
     // Derived value: filter students based on query
     // Use useMemo to avoid recomputing on unrelated renders
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        return STUDENTS.filter((s) => {
+        return students.filter((s) => {
             if (selectedDept !== "All" && s.department !== selectedDept) return false;
             if (q.length === 0) return true;
             return (
@@ -39,13 +50,26 @@ export default function HomeScreen() {
                 s.studentId.toLowerCase().includes(q)
             );
         });
-    }, [query, selectedDept]);
+    }, [query, selectedDept, students]);
+
+    // NEW: Conditional form rendering
+    if (showForm) {
+        return (
+            <View style={styles.container}>
+                <AddStudentForm onSubmitSuccess={handleNewStudent} />
+            </View>
+        );
+    }
 
     return (
         // View is the container that contains the list of students and search bar
         <View style={styles.container}>
             <View style={styles.titleBar}>
                 <Text style={styles.title}>Student Directory</Text>
+                {/* NEW: Add button */}
+                <Pressable style={styles.addButton} onPress={() => setShowForm(true)}>
+                    <Text style={styles.addButtonText}>+ Add</Text>
+                </Pressable>
             </View>
 
             {/* update the value and onChangeText function in the Search Bar */}
@@ -123,6 +147,17 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         color: "#FFFFFF",
+    },
+    addButton: {
+        backgroundColor: "#0D9488",
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    addButtonText: {
+        color: "#FFFFFF",
+        fontSize: 14,
+        fontWeight: "700",
     },
     count: {
         fontSize: 12,

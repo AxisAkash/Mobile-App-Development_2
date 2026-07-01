@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  ActivityIndicator,
+  Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import FormField from '../form-field';
 import type { Student } from '../../data/students';
@@ -56,55 +58,48 @@ export default function AddStudentForm({
       ? errors[field]
       : undefined;
   };
+
+  const getValidationErrors = (): FormErrors => {
+    const nextErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      nextErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      nextErrors.name = 'Name must be at least 2 characters';
+    }
+
+    if (!formData.studentId.trim()) {
+      nextErrors.studentId = 'Student ID is required';
+    } else if (!/^[0-9]{7,10}$/.test(formData.studentId.trim())) {
+      nextErrors.studentId = 'Student ID must be 7-10 digits';
+    }
+
+    if (!formData.department.trim()) {
+      nextErrors.department = 'Department is required';
+    }
+
+    if (!formData.bio.trim()) {
+      nextErrors.bio = 'Bio is required';
+    } else if (formData.bio.trim().length < 10) {
+      nextErrors.bio = 'Bio must be at least 10 characters';
+    }
+
+    if (!formData.skills.trim()) {
+      nextErrors.skills = 'Skills are required';
+    }
+
+    return nextErrors;
+  };
   // ===== END NEW =====
 
   // Existing validation logic - KEEP UNCHANGED
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    let isValid = true;
-
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-      isValid = false;
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-      isValid = false;
-    }
-
-    // Student ID validation
-    if (!formData.studentId.trim()) {
-      newErrors.studentId = 'Student ID is required';
-      isValid = false;
-    } else if (!/^[0-9]{7,10}$/.test(formData.studentId.trim())) {
-      newErrors.studentId = 'Student ID must be 7-10 digits';
-      isValid = false;
-    }
-
-    // Department validation
-    if (!formData.department.trim()) {
-      newErrors.department = 'Department is required';
-      isValid = false;
-    }
-
-    // Bio validation
-    if (!formData.bio.trim()) {
-      newErrors.bio = 'Bio is required';
-      isValid = false;
-    } else if (formData.bio.trim().length < 10) {
-      newErrors.bio = 'Bio must be at least 10 characters';
-      isValid = false;
-    }
-
-    // Skills validation
-    if (!formData.skills.trim()) {
-      newErrors.skills = 'Skills are required';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+    const nextErrors = getValidationErrors();
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
+
+  const isFormValid = Object.keys(getValidationErrors()).length === 0;
 
   useEffect(() => {
     if (!submitTrigger) return;
@@ -147,9 +142,9 @@ export default function AddStudentForm({
     setSubmitAttempted(true);
 
     // Validate form
-    const isFormValid = validateForm();
+    const valid = validateForm();
 
-    if (isFormValid) {
+    if (valid) {
       setIsSubmitting(true);
       setSubmitTrigger(true);
     }
@@ -165,8 +160,8 @@ export default function AddStudentForm({
   };
 
   return (
-    <ScrollView className="flex-1 bg-white p-6">
-      <View className="space-y-4">
+    <ScrollView style={styles.container}>
+      <View>
         {/* ===== UPDATED: Name field with onBlur and getFieldError ===== */}
         <FormField
           label="Full Name"
@@ -221,19 +216,45 @@ export default function AddStudentForm({
           autoCapitalize="words"
         />
 
-        {/* Submit Button */}
-        <TouchableOpacity
-          className={`mt-6 rounded-lg bg-blue-600 p-4 ${
-            isSubmitting ? 'opacity-50' : ''
-          }`}
+        {/* NEW: Submit button */}
+        <Pressable
+          style={[styles.button, (!isFormValid || isSubmitting) && styles.buttonDisabled]}
           onPress={handleSubmitPress}
-          disabled={isSubmitting}
+          disabled={!isFormValid || isSubmitting}
         >
-          <Text className="text-center text-lg font-semibold text-white">
-            {isSubmitting ? 'Submitting...' : 'Add Student'}
-          </Text>
-        </TouchableOpacity>
+          {isSubmitting ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.buttonText}>Join Directory</Text>
+          )}
+        </Pressable>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  button: {
+    backgroundColor: '#0D9488',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 32,
+  },
+  buttonDisabled: {
+    backgroundColor: '#CBD5E1',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+});

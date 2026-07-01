@@ -1,123 +1,157 @@
-// components/add-student-form.tsx 
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+} from "react-native";
 
-import React from "react"; 
+import FormField from "../form-field";
+import type { Student } from "../../data/students";
 
-import { useEffect, useState } from "react"; 
+interface AddStudentFormProps {
+  onSubmitSuccess: (student: Student) => void;
+}
 
-import { 
+interface FormData {
+  name: string;
+  studentId: string;
+  department: string;
+  bio: string;
+  skillsText: string;
+}
 
-  ActivityIndicator, 
+interface FormErrors {
+  name?: string;
+  studentId?: string;
+  department?: string;
+  bio?: string;
+}
 
-  Pressable, 
+export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps) {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    studentId: "",
+    department: "",
+    bio: "",
+    skillsText: "",
+  });
 
-  ScrollView, 
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  StyleSheet, 
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  Text, 
+  const handleSubmit = () => {
+    const nextErrors: FormErrors = {};
 
-  View, 
+    if (!formData.name.trim()) nextErrors.name = "Full name is required";
+    if (!formData.studentId.trim()) nextErrors.studentId = "Student ID is required";
+    if (!formData.department.trim()) nextErrors.department = "Department is required";
+    if (!formData.bio.trim()) nextErrors.bio = "Bio is required";
 
-} from "react-native"; 
+    setErrors(nextErrors);
 
-import FormField from "./form-field"; 
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
-import { Student } from "../data/students"; 
+    setIsSubmitting(true);
 
-  
+    const newStudent: Student = {
+      id: Date.now().toString(),
+      name: formData.name.trim(),
+      studentId: formData.studentId.trim(),
+      department: formData.department.trim(),
+      bio: formData.bio.trim(),
+      skills: formData.skillsText
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean),
+      avatarUrl: `https://i.pravatar.cc/150?u=${formData.studentId.trim()}`,
+    };
 
-interface AddStudentFormProps { 
+    onSubmitSuccess(newStudent);
+    setIsSubmitting(false);
+  };
 
-  onSubmitSuccess: (student: Student) => void; 
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.heading}>Join the Directory</Text>
+      <Text style={styles.subheading}>
+        Fill in your details below to add yourself to StudentDirectory.
+      </Text>
 
-} 
+      <FormField
+        label="Full Name"
+        value={formData.name}
+        onChangeText={(text: string) => updateField("name", text)}
+        placeholder="e.g. Ashraful Haque"
+        error={errors.name}
+      />
 
-  
+      <FormField
+        label="Student ID"
+        value={formData.studentId}
+        onChangeText={(text: string) => updateField("studentId", text)}
+        placeholder="e.g. 22-12345-1"
+        autoCapitalize="none"
+        error={errors.studentId}
+      />
 
-// Shape of the form's own state — note skillsText is a single 
+      <FormField
+        label="Department"
+        value={formData.department}
+        onChangeText={(text: string) => updateField("department", text)}
+        placeholder="e.g. Computer Science"
+        error={errors.department}
+      />
 
-// string here; it gets split into an array only on submit. 
+      <FormField
+        label="Bio"
+        value={formData.bio}
+        onChangeText={(text: string) => updateField("bio", text)}
+        placeholder="A short sentence about yourself..."
+        multiline
+        error={errors.bio}
+      />
 
-interface FormData { 
+      <FormField
+        label="Skills (comma-separated)"
+        value={formData.skillsText}
+        onChangeText={(text: string) => updateField("skillsText", text)}
+        placeholder="e.g. React Native, TypeScript, Figma"
+        autoCapitalize="none"
+      />
 
-  name: string; 
+      <Pressable style={styles.submitButton} onPress={handleSubmit}>
+        {isSubmitting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.submitButtonText}>Add Student</Text>
+        )}
+      </Pressable>
+    </ScrollView>
+  );
+}
 
-  studentId: string; 
-
-  department: string; 
-
-  bio: string; 
-
-  skillsText: string; 
-
-} 
-
-  
-
-interface FormErrors { 
-
-  name?: string; 
-
-  studentId?: string; 
-
-  department?: string; 
-
-  bio?: string; 
-
-} 
-
-  
-
-export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps) { 
-
-  // Combined state — all 5 text fields live together 
-
-  const [formData, setFormData] = useState<FormData>({ 
-
-    name: "", 
-
-    studentId: "", 
-
-    department: "", 
-
-    bio: "", 
-
-    skillsText: "", 
-
-  }); 
-
-  
-
-  // Separate state — unrelated to form field values 
-
-  const [errors, setErrors] = useState<FormErrors>({}); 
-
-  const [isSubmitting, setIsSubmitting] = useState(false); 
-
-  
-
-  // Generic field updater — one function handles all 5 fields 
-
-  const updateField = (field: keyof FormData, value: string) => { 
-
-    setFormData((prev) => ({ ...prev, [field]: value })); 
-
-  }; 
-
-  
-
-  // ... validation effect and submit handler go here (Section 4 and 5) 
-
-  
-
-  return ( 
-
-    <ScrollView style={styles.container}> 
-
-      {/* form fields go here — Section 3.3 */} 
-
-    </ScrollView> 
-
-  ); 
-
-} 
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#FFFFFF", padding: 20 },
+  heading: { fontSize: 20, fontWeight: "800", color: "#0D1F4E", marginBottom: 4 },
+  subheading: { fontSize: 13, color: "#64748B", marginBottom: 24, lineHeight: 19 },
+  submitButton: {
+    marginTop: 8,
+    backgroundColor: "#2563EB",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+});
